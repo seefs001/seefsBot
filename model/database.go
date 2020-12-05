@@ -33,6 +33,8 @@ func Database(dialector gorm.Dialector) error {
 			// table name singular
 			SingularTable: true,
 		},
+		// global update
+		AllowGlobalUpdate: true,
 	})
 	if err != nil {
 		return err

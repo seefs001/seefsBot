@@ -1,10 +1,13 @@
 package bot
 
-import (
-	tb "gopkg.in/tucnak/telebot.v2"
-)
+import tb "gopkg.in/tucnak/telebot.v2"
 
 func setHandle() {
-	B.Handle(tb.OnText, WelcomeMsg)
-	B.Handle(tb.OnDocument, WelcomeMsg)
+	B.Handle("/start", start)
+	B.Handle("/get_score", getScore)
+	B.Handle("/suggest", suggest)
+	B.Handle("/card", recharge)
+	B.Handle("/send_notice", sendNotice)
+	B.Handle("/gen_card", genCard)
+	B.Handle(tb.OnText, queryInfo)
 }

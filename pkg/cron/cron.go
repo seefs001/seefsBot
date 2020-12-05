@@ -7,8 +7,9 @@ import (
 
 var Cron *cron.Cron
 
-func InitTasks() {
+func Init() {
 	Cron = cron.New(cron.WithSeconds())
-	Cron.AddFunc("@every 1s", task.TestTask)
+	//Cron.AddFunc("*/5 * * * * ?", task.UpdateFreeScore)
+	Cron.AddFunc("CRON_TZ=Asia/Shanghai 0 0 0 */1 * ?", task.UpdateFreeScore)
 	Cron.Start()
 }

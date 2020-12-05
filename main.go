@@ -21,10 +21,9 @@ func main() {
 }
 
 func run() {
-	// initialize config
-	if err := conf.InitConfig(*fConfig); err != nil {
+	if err := conf.Init(*fConfig); err != nil {
 		panic(err)
 	}
-	bot.InitBot()
+	bot.Init()
 	bot.Start()
 }

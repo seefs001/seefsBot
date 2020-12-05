@@ -17,7 +17,7 @@ var (
 	B *tb.Bot
 )
 
-func InitBot() {
+func Init() {
 	poller := &tb.LongPoller{Timeout: 10 * time.Second}
 	logger.Info("bot init successfully")
 	// create bot
@@ -42,7 +42,7 @@ func Start() {
 	B.Start()
 }
 
-func Send(to tb.Recipient, what string, options ...interface{}) (*tb.Message, error) {
+func Send(to tb.Recipient, what interface{}, options ...interface{}) (*tb.Message, error) {
 	send, err := B.Send(to, what, options)
 	return send, err
 }

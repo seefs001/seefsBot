@@ -1,7 +1,6 @@
 [meta]
-name = "seefsBot"
+name = "tianyanchaBot"
 run-mode = "debug"
-server_address = ":8090"
 
 [log]
 log-path = "./log"
@@ -17,15 +16,20 @@ host = "127.0.0.1"
 port = 3306
 user = "root"
 password = "xuexiaojian"
-db = "pixiv-bot"
+db = "tianyancha"
 charset = "utf8"
 max-idle = 50
 max-active = 100
 max-lifetime = 30 # second
 
-[serverchan]
-sckey = "SCU50582T7e04cfb67db3abc2e8e28ee66f9aa82b5ccd0749a8cbd"
-
 [bot]
 token = "1416461032:AAENbSxxTeoaaOKuk5y-dRybn9B5EPyRHEU"
 endpoint = "https://api.telegram.org"
+
+[score]
+reward_score = 5 # 奖励给邀请人
+be_rewarded_score = 5 # 奖励给被邀请人
+free_score = 1 #每天的免费次数
+
+[admin]
+username = "aiyuanyuan" # 管理员用户名

@@ -12,15 +12,14 @@ import (
 	"seefs-bot/pkg/logger"
 )
 
-// InitConfig initialize config
-func InitConfig(configPath string) error {
+// Init initialize config
+func Init(configPath string) error {
 
 	ext := filepath.Ext(configPath)                   // .yml
 	filename := configPath[:len(configPath)-len(ext)] // xxx
 	viper.SetConfigName(filename)
 	viper.SetConfigType(ext[1:])
 	viper.AddConfigPath(".")
-	viper.SetDefault("meta.port", 3000)
 	viper.AddConfigPath(".")
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -29,7 +28,6 @@ func InitConfig(configPath string) error {
 			panic(fmt.Errorf("read config error: %s", err))
 		}
 	}
-
 	// run mode
 	development := false
 	if viper.GetString("meta.run-mode") == "debug" {
@@ -65,7 +63,6 @@ func InitConfig(configPath string) error {
 			return err
 		}
 	}
-	// initialize task
-	cron.InitTasks()
+	cron.Init()
 	return nil
 }
