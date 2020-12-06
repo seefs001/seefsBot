@@ -171,6 +171,18 @@ func invite(userID int, code string) (bool, error) {
 	return true, nil
 }
 
+func inviteMsg(m *tb.Message) {
+	if !m.Private() {
+		return
+	}
+	user := model.User{}
+	if err := model.DB.First(&user, m.Sender.ID).Error; err != nil {
+		logger.Info(fmt.Sprintf("%d /invite 先发送/start初始化账号", m.Sender.ID))
+		_, _ = B.Send(m.Chat, fmt.Sprintf("请先发送/start初始化账号"))
+		return
+	}
+	_, _ = B.Send(m.Chat, fmt.Sprintf("邀请新用户发送你的邀请码，双方获得5积分，您的邀请码是%s", user.InviteCode))
+}
 func recharge(m *tb.Message) {
 	if !m.Private() {
 		return
