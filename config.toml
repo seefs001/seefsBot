@@ -23,7 +23,7 @@ max-active = 100
 max-lifetime = 30 # second
 
 [bot]
-token = "1416461032:AAENbSxxTeoaaOKuk5y-dRybn9B5EPyRHEU"
+token = "1416461032:AAENbSxxTeoaaOKuk5y-dRybn9B5U"
 endpoint = "https://api.telegram.org"
 
 [score]

@@ -6,6 +6,7 @@ import (
 	"github.com/seefs001/seefslib-go/xconvertor"
 	"github.com/seefs001/seefslib-go/xrandom"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"gorm.io/gorm"
 	"seefs-bot/model"
@@ -19,35 +20,44 @@ func start(m *tb.Message) {
 	if !m.Private() {
 		return
 	}
-	logger.Info(fmt.Sprintf("%s使用了/start", m.Sender.Username))
+	logger.Info(fmt.Sprintf("%d使用了/start", m.Sender.ID))
 	code := xrandom.GenRandomCode(8)
-	user := &model.User{
-		ID:         m.Sender.ID,
+	// 用户名为空处理
+	if m.Sender.Username == "" {
+		m.Sender.Username = "default"
+	}
+	user := model.User{
+		ID:         int64(m.Sender.ID),
 		UserName:   m.Sender.Username,
 		Score:      0,
 		FreeScore:  viper.GetInt64("score.free_score"),
 		InviteCode: code,
 	}
-	model.DB.Model(&model.User{}).Create(user)
-	logger.Info(fmt.Sprintf("%s创建账号", m.Sender.Username))
+	err := model.DB.Model(&model.User{}).FirstOrCreate(&user).Error
+	if err != nil {
+		logger.Error(fmt.Sprintf("%d用户初始化出错，可能是你没有设置用户名", m.Sender.ID), zap.Error(err))
+		_, _ = B.Send(m.Chat, fmt.Sprintf("用户初始化出错，可能是你没有设置用户名"))
+		return
+	}
+	logger.Info(fmt.Sprintf("%d创建账号", m.Sender.ID))
 	userID := strconv.FormatInt(int64(m.Sender.ID), 10)
-	_, err := cache.Cache.Get(userID)
+	_, err = cache.Cache.Get(userID)
 	if err == nil {
 		_, _ = B.Send(m.Chat, fmt.Sprintf("发送频率过快"))
-		logger.Info(fmt.Sprintf("%s发送频率过快", m.Sender.Username))
+		logger.Info(fmt.Sprintf("%d发送频率过快", m.Sender.ID))
 		return
 	}
 
 	err = cache.Cache.Set(userID, []byte("true"))
 	if err != nil {
-		logger.Info(fmt.Sprintf("%s cache set err", m.Sender.Username))
+		logger.Error(fmt.Sprintf("%d cache set err", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("发送频率过快"))
 		return
 	}
 	defer func() {
 		err = cache.Cache.Delete(userID)
 		if err != nil {
-			logger.Info(fmt.Sprintf("%s delete cache err", m.Sender.Username))
+			logger.Error(fmt.Sprintf("%d delete cache err", m.Sender.ID))
 			_, _ = B.Send(m.Chat, fmt.Sprintf("发送频率过快"))
 			return
 		}
@@ -71,7 +81,7 @@ func suggest(m *tb.Message) {
 	if !m.Private() {
 		return
 	}
-	logger.Info(fmt.Sprintf("/suggest chat_id: %d  username:%s", m.Sender.ID, m.Sender.Username))
+	logger.Info(fmt.Sprintf("/suggest chat_id: %d", m.Sender.ID))
 	_, _ = B.Send(m.Chat, fmt.Sprintf("联系客服：@tianyan88bot"))
 }
 
@@ -82,28 +92,28 @@ func getScore(m *tb.Message) {
 	userID := strconv.FormatInt(int64(m.Sender.ID), 10)
 	_, err := cache.Cache.Get(userID)
 	if err == nil {
-		logger.Info(fmt.Sprintf("%s cache set err", m.Sender.Username))
+		logger.Error(fmt.Sprintf("%d cache set err", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("发送频率过快"))
 		return
 	}
 
 	err = cache.Cache.Set(userID, []byte("true"))
 	if err != nil {
-		logger.Info(fmt.Sprintf("%s cache set err", m.Sender.Username))
+		logger.Error(fmt.Sprintf("%d cache set err", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("发送频率过快"))
 		return
 	}
 	defer func() {
 		err = cache.Cache.Delete(userID)
 		if err != nil {
-			logger.Info(fmt.Sprintf("%s cache delete err", m.Sender.Username))
+			logger.Error(fmt.Sprintf("%d cache delete err", m.Sender.ID))
 			_, _ = B.Send(m.Chat, fmt.Sprintf("发送频率过快"))
 			return
 		}
 	}()
 	user := model.User{}
-	if err := model.DB.First(&user, m.Sender.ID).Error; err != nil {
-		logger.Info(fmt.Sprintf("%s没有找到他的", m.Sender.Username))
+	if err = model.DB.First(&user, m.Sender.ID).Error; err != nil {
+		logger.Error(fmt.Sprintf("%d没有找到他的", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("请先发送/start初始化账号"))
 		return
 	}
@@ -186,13 +196,13 @@ func recharge(m *tb.Message) {
 	}()
 	cardCode := m.Payload
 	if cardCode == "" {
-		logger.Info(fmt.Sprintf("%s /recharge 不按卡密格式", m.Sender.Username))
+		logger.Info(fmt.Sprintf("%d /recharge 不按卡密格式", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("请按 /card 卡密 格式充值您的卡密获取积分，如没有，请联系客服"))
 		return
 	}
 	user := model.User{}
 	if err := model.DB.First(&user, m.Sender.ID).Error; err != nil {
-		logger.Info(fmt.Sprintf("%s /recharge 先发送/start初始化账号", m.Sender.Username))
+		logger.Info(fmt.Sprintf("%d /recharge 先发送/start初始化账号", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("请先发送/start初始化账号"))
 		return
 	}
@@ -200,7 +210,7 @@ func recharge(m *tb.Message) {
 	if err := model.DB.Model(&model.Card{}).
 		Where("content = ?", cardCode).
 		First(&card).Error; err != nil {
-		logger.Info(fmt.Sprintf("%s /recharge 没有找到该卡密", m.Sender.Username))
+		logger.Info(fmt.Sprintf("%d /recharge 没有找到该卡密", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("没有找到该卡密"))
 		return
 	}
@@ -208,24 +218,24 @@ func recharge(m *tb.Message) {
 		Where("id = ?", user.ID).
 		Update("score",
 			gorm.Expr("score + ?", card.Score)).Error; err != nil {
-		logger.Info(fmt.Sprintf("%s /recharge 充值积分出错", m.Sender.Username))
+		logger.Info(fmt.Sprintf("%d /recharge 充值积分出错", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("充值积分出错，请联系管理员"))
 		return
 	}
 	if err := model.DB.Model(&model.Card{}).
 		Where("id = ?", card.ID).
 		Delete(&card).Error; err != nil {
-		logger.Info(fmt.Sprintf("%s /recharge 卡密处理出错", m.Sender.Username))
+		logger.Info(fmt.Sprintf("%d /recharge 卡密处理出错", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("卡密处理出错，请联系管理员"))
 		return
 	}
 	if err := model.DB.Model(&model.User{}).
 		First(&user, user.ID).Error; err != nil {
-		logger.Info(fmt.Sprintf("%s /recharge 查询用户积分出错", m.Sender.Username))
+		logger.Info(fmt.Sprintf("%d /recharge 查询用户积分出错", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("查询用户积分出错，请联系管理员"))
 		return
 	}
-	logger.Info(fmt.Sprintf("%s /recharge 充值成功,当前积分%d", m.Sender.Username, user.Score))
+	logger.Info(fmt.Sprintf("%d /recharge 充值成功,当前积分%d", m.Sender.ID, user.Score))
 	_, _ = B.Send(m.Chat, fmt.Sprintf("卡密充值成功,你的当前积分为%d", user.Score))
 }
 
@@ -391,23 +401,23 @@ func queryInfo(m *tb.Message) {
 	}()
 	user := model.User{}
 	if err := model.DB.First(&user, m.Sender.ID).Error; err != nil {
-		logger.Info(fmt.Sprintf("%s /query 请先初始化", m.Sender.Username))
+		logger.Info(fmt.Sprintf("%d /query 请先初始化", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("请先发送/start初始化账号"))
 		return
 	}
 	success, err := invite(m.Sender.ID, m.Text)
 	if err != nil {
-		logger.Info(fmt.Sprintf("%s /query invite err %s", m.Sender.Username, err.Error()))
+		logger.Info(fmt.Sprintf("%d /query invite err %s", m.Sender.ID, err.Error()))
 		_, _ = B.Send(m.Chat, fmt.Sprintf(err.Error()))
 		return
 	}
 	if success {
-		logger.Info(fmt.Sprintf("%s /query 邀请码绑定成功", m.Sender.Username))
+		logger.Info(fmt.Sprintf("%d /query 邀请码绑定成功", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("邀请码绑定成功，双方账户自动奖励5积分，感谢对天眼的支持。"))
 		return
 	}
 	if user.FreeScore <= 0 && user.Score <= 0 {
-		logger.Info(fmt.Sprintf("%s /query 积分不足", m.Sender.Username))
+		logger.Info(fmt.Sprintf("%d /query 积分不足", m.Sender.ID))
 		_, _ = B.Send(m.Chat, fmt.Sprintf("您的积分或者免费额度不足，当前积分为%d，免费额度为%d次，可以通过填写邀请码或者卡密充值获得积分哦。", user.Score,
 			user.FreeScore))
 		return
@@ -489,22 +499,25 @@ func queryInfo(m *tb.Message) {
 				Where("id = ?", user.ID).
 				Update("free_score",
 					gorm.Expr("free_score - ?", 1)).Error; err != nil {
-				logger.Info(fmt.Sprintf("%s /query 免费额度扣除失败", m.Sender.Username))
-				_, _ = B.Send(m.Chat, "免费额度扣除失败，退出查询")
+				logger.Error(fmt.Sprintf("%d /query 免费额度扣除失败", m.Sender.ID))
 				return
 			}
+			scoreTips := fmt.Sprintf("\n您的剩余查询积分：%d", user.FreeScore-1)
+			_, _ = B.Send(m.Chat, scoreTips)
+			return
 		} else {
 			if err := model.DB.Model(&model.User{}).
 				Where("id = ?", user.ID).
 				Update("score",
 					gorm.Expr("score - ?", 1)).Error; err != nil {
-				logger.Info(fmt.Sprintf("%s /query 积分扣除失败", m.Sender.Username))
-				_, _ = B.Send(m.Chat, "积分扣除失败，退出查询")
+				logger.Error(fmt.Sprintf("%d /query 积分扣除失败", m.Sender.ID))
 				return
 			}
+			scoreTips := fmt.Sprintf("\n您的剩余查询积分：%d", user.Score-1)
+			_, _ = B.Send(m.Chat, scoreTips)
+			return
 		}
-		return
 	}
-	logger.Info(fmt.Sprintf("%s /query 没有查到你要的信息", m.Sender.Username))
+	logger.Info(fmt.Sprintf("%d /query 没有查到你要的信息", m.Sender.ID))
 	_, _ = B.Send(m.Chat, "没有查到你要的信息")
 }
