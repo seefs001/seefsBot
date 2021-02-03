@@ -1,35 +1,13 @@
-[meta]
-name = "tianyanchaBot"
-run-mode = "debug"
-
-[log]
-log-path = "./log"
-# 保存的最大天数
-max-age = 30
-# 日志文件小大（M）
-max-size = 100
-# 最多存在多少个切片文件
-max-back-up = 60
+[server]
+addr = ":8080"
 
 [mysql]
-host = "127.0.0.1"
-port = 3306
-user = "root"
-password = "xuexiaojian"
-db = "tianyancha"
-charset = "utf8"
-max-idle = 50
-max-active = 100
-max-lifetime = 30 # second
+dsn = "root:123456@tcp(127.0.0.1:3306)/seefsbot?charset=utf8mb4&parseTime=True&loc=Local"
 
-[bot]
-token = "1416461032:AAENbSxxTeoaaOKuk5y-dRybn9B5U"
-endpoint = "https://api.telegram.org"
+[redis]
+addr = "127.0.0.1:6379"
+db = 0
+pass = ""
 
-[score]
-reward_score = 5 # 奖励给邀请人
-be_rewarded_score = 5 # 奖励给被邀请人
-free_score = 1 #每天的免费次数
-
-[admin]
-username = "aiyuanyuan" # 管理员用户名
+[log]
+path = "./log"
