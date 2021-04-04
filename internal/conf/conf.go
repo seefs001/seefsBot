@@ -1,17 +1,15 @@
 package conf
 
 import (
-	"github.com/BurntSushi/toml"
 	"os"
+
+	"github.com/BurntSushi/toml"
 )
 
-var conf *Config
+var conf Config
 
 func GetConf() *Config {
-	if conf == nil {
-		panic("please init conf")
-	}
-	return conf
+	return &conf
 }
 
 type Config struct {
@@ -22,7 +20,8 @@ type Config struct {
 }
 
 type Server struct {
-	Addr string `toml:"addr"`
+	Addr     string `toml:"addr"`
+	BotToken string `toml:"bot_token"`
 }
 
 type MySQL struct {
@@ -30,7 +29,8 @@ type MySQL struct {
 }
 
 type Log struct {
-	Path string `toml:"path"`
+	LogPath string `json:"log_path" toml:"log_path"`
+	LogName string `json:"log_name" toml:"log_name"`
 }
 
 type Redis struct {

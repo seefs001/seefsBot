@@ -1,11 +1,11 @@
 package bot
 
 import (
-	"github.com/seefs001/seefsBot/internal/bot/fsm"
-	"github.com/seefs001/seefsBot/pkg/logger"
-	"go.uber.org/zap"
-	tb "gopkg.in/tucnak/telebot.v2"
 	"time"
+
+	"github.com/phuslu/log"
+	"github.com/seefs001/seefsBot/internal/bot/fsm"
+	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 
 func Init(token string) error {
 	poller := &tb.LongPoller{Timeout: 10 * time.Second}
-	logger.Logger().Info("bot init successfully")
+	log.Info().Msg("bot init")
 
 	var err error
 
@@ -27,16 +27,20 @@ func Init(token string) error {
 		Poller: poller,
 	})
 	if err != nil {
-		logger.Logger().Fatal("init err", zap.Error(err))
+		log.Fatal().Err(err)
 		return err
 	}
-	logger.Logger().Info("bot start successfully")
+	log.Info().Msg("bot start successfully")
 	return nil
 }
 
-//Start bot
+// Start bot
 func Start() {
 	setCommend()
 	setHandle()
 	B.Start()
+}
+
+func Stop() {
+	B.Stop()
 }

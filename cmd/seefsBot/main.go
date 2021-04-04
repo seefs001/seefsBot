@@ -1,49 +1,56 @@
 package main
 
 import (
-	"flag"
-	"github.com/seefs001/seefsBot/internal/bot"
+	"github.com/phuslu/log"
 	"github.com/seefs001/seefsBot/internal/conf"
-	"github.com/seefs001/seefsBot/internal/http"
+	"github.com/seefs001/seefsBot/internal/model"
+	"github.com/seefs001/seefsBot/internal/server"
 	"github.com/seefs001/seefsBot/pkg/logger"
 	"github.com/seefs001/seefsBot/pkg/orm"
 	"gorm.io/driver/mysql"
-	"os"
+	"gorm.io/driver/sqlite"
 )
 
 func main() {
-	flag.Parse()
-	if *fHelp {
-		flag.Usage()
-	} else {
-		run()
-	}
+	run()
 }
 
 func run() {
-	if err := conf.Init(*fConfig); err != nil {
+	if err := conf.Init("./config.toml"); err != nil {
 		panic(err)
 	}
 
-	logger.New(logger.SetEnv("dev"), logger.SetPath(conf.GetConf().Log.Path))
+	options := logger.Options{
+		LogPath: conf.GetConf().Log.LogPath,
+		LogName: conf.GetConf().Log.LogName,
+	}
+	logger.Init(&options)
 
 	if err := orm.Init(mysql.Open(conf.GetConf().MySQL.DSN)); err != nil {
-		panic(err)
+		log.Info().Msg("MySQL连接失败，自动切换到Sqlite")
+		err := orm.Init(sqlite.Open("seefsBot.db"))
+		if err != nil {
+			panic(err)
+		}
 	}
-	//if err := redis.Init(conf.GetConf().Redis.Addr,
+	// if err := redis.Init(conf.GetConf().Redis.Addr,
 	//	conf.GetConf().Redis.Pass,
 	//	conf.GetConf().Redis.DB);err!=nil{
 	//	panic(err)
 	//}
+	orm.DB().AutoMigrate(&model.User{}, &model.Coin{})
 
-	if err := bot.Init(os.Getenv("BOT_TOKEN")); err != nil {
-		panic(err)
-	}
+	//if err := bot.Init(conf.GetConf().Server.BotToken); err != nil {
+	//	panic(err)
+	//}
 
 	go func() {
-		err := http.Start()
+		err := server.Start()
 		panic(err)
 	}()
 
-	bot.Start()
+	//bot.Start()
+	for true {
+
+	}
 }

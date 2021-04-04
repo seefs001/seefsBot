@@ -13,16 +13,10 @@ var (
 	ctx = context.Background()
 )
 
-func checkRdb() {
-	panic("rdb is not initialized")
-}
-
 func Rdb() *redis.Client {
-	checkRdb()
 	return rdb
 }
 
-// Init initialize redis client
 func Init(addr, pass string, db int) error {
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     addr,
@@ -39,43 +33,37 @@ func Init(addr, pass string, db int) error {
 	return nil
 }
 
-// Get get value from redis
-func Get(key string) (string, error) {
-	checkRdb()
-	return rdb.Get(ctx, key).Result()
+func Close() error {
+	return rdb.Close()
 }
 
-// Keys ...
+func Get(key string) (string, error) {
+	return Rdb().Get(ctx, key).Result()
+}
+
 func Keys(pattern string) ([]string, error) {
-	checkRdb()
-	result, err := rdb.Keys(ctx, pattern).Result()
+	result, err := Rdb().Keys(ctx, pattern).Result()
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-// Set set value to redis
 func Set(key string, value interface{}, expiration time.Duration) error {
-	checkRdb()
-	_, err := rdb.Set(ctx, key, value, expiration).Result()
+	_, err := Rdb().Set(ctx, key, value, expiration).Result()
 	return err
 }
 
-// Scan ...
 func Scan(cursor uint64, match string, count int64) ([]string, uint64, error) {
-	checkRdb()
-	return rdb.Scan(ctx, cursor, match, count).Result()
+	return Rdb().Scan(ctx, cursor, match, count).Result()
 }
 
 const (
 	KeyExisted = 1
 )
 
-// Exists exist in redis
 func Exists(key string) (bool, error) {
-	checkRdb()
-	result, err := rdb.Exists(ctx, key).Result()
+	result, err := Rdb().Exists(ctx, key).Result()
 	if err != nil {
 		return false, err
 	}
@@ -85,37 +73,15 @@ func Exists(key string) (bool, error) {
 	return false, nil
 }
 
-// Delete delete from redis
 func Delete(key string) error {
-	checkRdb()
-	_, err := rdb.Del(ctx, key).Result()
+	_, err := Rdb().Del(ctx, key).Result()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// Do ...
 func Do(args ...interface{}) (interface{}, error) {
-	checkRdb()
-	result, err := rdb.Do(ctx, args).Result()
+	result, err := Rdb().Do(ctx, args).Result()
 	return result, err
-}
-
-// Publish publish to channel
-func Publish(channel string, message interface{}) error {
-	checkRdb()
-	return rdb.Publish(ctx, channel, message).Err()
-}
-
-// Subscribe subscribe a channel
-func Subscribe(channel string) *redis.PubSub {
-	checkRdb()
-	return rdb.Subscribe(ctx, channel)
-}
-
-// SubscribeChan subscribe a channel,return <- chan
-func SubscribeChan(channel string) <-chan *redis.Message {
-	checkRdb()
-	return rdb.Subscribe(ctx, channel).Channel()
 }

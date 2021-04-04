@@ -2,11 +2,11 @@ package bot
 
 import (
 	"fmt"
+
+	"github.com/phuslu/log"
 	"github.com/seefs001/seefsBot/internal/model"
-	"github.com/seefs001/seefsBot/pkg/logger"
 	"github.com/seefs001/seefsBot/pkg/orm"
 	"github.com/seefs001/seefsBot/pkg/util"
-	"go.uber.org/zap"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -29,7 +29,7 @@ func start(m *tb.Message) {
 		ParseMode: tb.ModeMarkdownV2,
 	})
 	if err != nil {
-		logger.Logger().Error("bot send err", zap.Error(err))
+		log.Fatal().Err(err)
 	}
 }
 

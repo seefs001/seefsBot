@@ -2,7 +2,6 @@ package orm
 
 import (
 	"log"
-	"os"
 	"time"
 
 	"gorm.io/gorm/schema"
@@ -15,16 +14,13 @@ import (
 var dbInstance *gorm.DB
 
 func DB() *gorm.DB {
-	if dbInstance == nil {
-		panic("please init db")
-	}
 	return dbInstance
 }
 
 // Init initialize database
 func Init(dialector gorm.Dialector) error {
 	gormLogger := logger.New(
-		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		log.Default(), // io writer
 		logger.Config{
 			SlowThreshold: time.Second, // 慢 SQL 阈值
 			LogLevel:      logger.Info, // Log level
@@ -53,4 +49,12 @@ func Init(dialector gorm.Dialector) error {
 	s.SetMaxOpenConns(100)
 	s.SetConnMaxLifetime(30 * time.Second)
 	return nil
+}
+
+func Close() error {
+	db, err := dbInstance.DB()
+	if err != nil {
+		return err
+	}
+	return db.Close()
 }

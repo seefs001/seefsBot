@@ -1,5 +1,6 @@
 [server]
 addr = ":8080"
+bot_token = "1580986280:AAEVgRmPNNkDAaOSMOg4h5MF2kUBlA3HFYw"
 
 [mysql]
 dsn = "root:123456@tcp(127.0.0.1:3306)/seefsbot?charset=utf8mb4&parseTime=True&loc=Local"
@@ -10,4 +11,5 @@ db = 0
 pass = ""
 
 [log]
-path = "./log"
+log_path = "./logs/"
+log_name = "seefsBot"
