@@ -10,6 +10,7 @@ import (
 	"github.com/seefs001/seefsBot/internal/conf"
 	"github.com/seefs001/seefsBot/internal/model"
 	"github.com/seefs001/seefsBot/internal/server"
+	"github.com/seefs001/seefsBot/internal/tasks"
 	"github.com/seefs001/seefsBot/pkg/logger"
 	"github.com/seefs001/seefsBot/pkg/orm"
 	"gorm.io/driver/mysql"
@@ -45,19 +46,29 @@ func run() {
 	//}
 	orm.DB().AutoMigrate(&model.User{}, &model.Coin{})
 
-	//if err := bot.Init(conf.GetConf().Server.BotToken); err != nil {
-	//	panic(err)
-	//}
+	if err := bot.Init(conf.GetConf().Server.BotToken); err != nil {
+		panic(err)
+	}
+
 	go func() {
 		err := server.Start()
-		panic(err)
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	go func() {
+		err := tasks.Start()
+		if err != nil {
+			panic(err)
+		}
 	}()
 
 	go func() {
 		signals := make(chan os.Signal, 1)
 		signal.Notify(signals,
 			os.Interrupt,
-			os.Kill,
+			syscall.SIGTERM,
 			syscall.SIGQUIT,
 			syscall.SIGTERM,
 			syscall.SIGINT)
@@ -65,6 +76,7 @@ func run() {
 			sig := <-signals
 			switch sig {
 			default:
+				tasks.Stop()
 				server.Stop()
 				bot.Stop()
 				return

@@ -17,6 +17,7 @@ type Config struct {
 	MySQL  *MySQL  `toml:"mysql" json:"mysql,omitempty"`
 	Redis  *Redis  `toml:"redis" json:"redis,omitempty"`
 	Log    *Log    `toml:"log" json:"log,omitempty"`
+	Task   *Task   `toml:"task" json:"task,omitempty"`
 }
 
 type Server struct {
@@ -37,6 +38,10 @@ type Redis struct {
 	Addr string `toml:"addr"`
 	DB   int    `toml:"db"`
 	Pass string `toml:"pass"`
+}
+
+type Task struct {
+	Cron string `json:"cron"`
 }
 
 func Init(filepath string) error {
