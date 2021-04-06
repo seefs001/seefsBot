@@ -17,6 +17,8 @@ import (
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
+var Server = &fiber.App{}
+
 func Start() error {
 	r := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
@@ -59,6 +61,7 @@ func Start() error {
 		return handlePush(c, secretKey, text)
 	})
 	log.Info().Msgf("API init on host %s", conf.GetConf().Server.Addr)
+	Server = r
 	return r.Listen(conf.GetConf().Server.Addr)
 }
 
@@ -127,4 +130,8 @@ func UpdatePrice() error {
 			Where("type = ?", k).Update("price", v)
 	}
 	return nil
+}
+
+func Stop() error {
+	return Server.Shutdown()
 }

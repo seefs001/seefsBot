@@ -1,7 +1,12 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/phuslu/log"
+	"github.com/seefs001/seefsBot/internal/bot"
 	"github.com/seefs001/seefsBot/internal/conf"
 	"github.com/seefs001/seefsBot/internal/model"
 	"github.com/seefs001/seefsBot/internal/server"
@@ -43,14 +48,29 @@ func run() {
 	//if err := bot.Init(conf.GetConf().Server.BotToken); err != nil {
 	//	panic(err)
 	//}
-
 	go func() {
 		err := server.Start()
 		panic(err)
 	}()
 
-	//bot.Start()
-	for true {
+	go func() {
+		signals := make(chan os.Signal, 1)
+		signal.Notify(signals,
+			os.Interrupt,
+			os.Kill,
+			syscall.SIGQUIT,
+			syscall.SIGTERM,
+			syscall.SIGINT)
+		for {
+			sig := <-signals
+			switch sig {
+			default:
+				server.Stop()
+				bot.Stop()
+				return
+			}
+		}
+	}()
 
-	}
+	bot.Start()
 }
