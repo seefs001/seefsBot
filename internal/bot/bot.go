@@ -5,6 +5,8 @@ import (
 
 	"github.com/phuslu/log"
 	"github.com/seefs001/seefsBot/internal/bot/fsm"
+	"github.com/seefs001/seefsBot/internal/model"
+	"github.com/seefs001/seefsBot/pkg/orm"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -43,4 +45,16 @@ func Start() {
 
 func Stop() {
 	B.Stop()
+}
+
+func Broadcast(msg string) {
+	var users []model.User
+	orm.DB().Model(&model.User{}).Find(&users)
+	for _, user := range users {
+		_, err := B.Send(tb.ChatID(user.ID), msg)
+		if err != nil {
+			log.Info().Err(err)
+			return
+		}
+	}
 }

@@ -41,7 +41,9 @@ type Redis struct {
 }
 
 type Task struct {
-	Cron string `json:"cron"`
+	Cron       string  `toml:"cron" json:"cron"`
+	UpperLimit float64 `toml:"upper_limit" json:"upper_limit"`
+	LowerLimit float64 `toml:"lower_limit" json:"lower_limit"`
 }
 
 func Init(filepath string) error {

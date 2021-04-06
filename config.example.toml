@@ -15,4 +15,6 @@ log_path = "./logs/"
 log_name = "seefsBot"
 
 [task]
-cron = "0/5 0/5 * * * ? "
+cron = "0 0/5 * * * ? "
+upper_limit = 0.0005
+lower_limit = 0.0005

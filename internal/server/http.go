@@ -6,7 +6,7 @@ import (
 	"github.com/seefs001/seefsBot/internal/bot"
 	"github.com/seefs001/seefsBot/internal/conf"
 	"github.com/seefs001/seefsBot/internal/model"
-	"github.com/seefs001/seefsBot/internal/tasks"
+	"github.com/seefs001/seefsBot/pkg/util"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -34,7 +34,7 @@ func Start() error {
 	})
 
 	Server.Get("/update_prices", func(ctx *fiber.Ctx) error {
-		results, err := tasks.UpdatePrice()
+		results, err := util.UpdatePrice()
 		if err != nil {
 			return err
 		}
